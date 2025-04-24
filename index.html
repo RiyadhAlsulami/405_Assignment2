@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Data Viewer</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>API Data Viewer</h1>
+        </header>
+        
+        <section class="api-selection">
+            <h2>Select an API</h2>
+            <div class="api-buttons">
+                <button id="random-user-btn" class="api-btn">Random User</button>
+                <button id="university-btn" class="api-btn">University Search</button>
+            </div>
+        </section>
+
+        <section class="search-section" id="university-search" style="display: none;">
+            <h2>Search Universities</h2>
+            <div class="search-container">
+                <input type="text" id="university-input" placeholder="Enter university name...">
+                <button id="search-btn">Search</button>
+            </div>
+        </section>
+
+        <section class="random-user-section" id="random-user-controls" style="display: none;">
+            <h2>Random User Generator</h2>
+            <button id="generate-user-btn">Generate User</button>
+        </section>
+
+        <section class="results-container">
+            <div id="loading" class="loading" style="display: none;">Loading...</div>
+            <div id="error-message" class="error" style="display: none;"></div>
+            <div id="results" class="results"></div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
