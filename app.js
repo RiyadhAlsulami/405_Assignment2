@@ -12,7 +12,8 @@ const errorMessage = document.getElementById('error-message');
 
 // API URLs
 const RANDOM_USER_API = 'https://randomuser.me/api/';
-const UNIVERSITY_API = 'https://universities.hipolabs.com/search?name=';
+const UNIVERSITY_API = 'https://cors-anywhere.herokuapp.com/http://universities.hipolabs.com/search?name=';
+const BACKUP_UNIVERSITY_API = 'https://api.publicapis.org/entries?title=university';
 
 // Current API state
 let currentApi = null;
@@ -84,7 +85,20 @@ async function searchUniversities(query) {
     showLoading();
     
     try {
-        const response = await fetch(`${UNIVERSITY_API}${encodeURIComponent(query)}`);
+        // First try with the CORS proxy
+        let response = await fetch(`${UNIVERSITY_API}${encodeURIComponent(query)}`);
+        
+        // If the first attempt fails, try the direct HTTP endpoint
+        if (!response.ok) {
+            console.log('CORS proxy failed, trying direct HTTP endpoint...');
+            response = await fetch(`http://universities.hipolabs.com/search?name=${encodeURIComponent(query)}`);
+        }
+        
+        // If both attempts fail, try the backup API
+        if (!response.ok) {
+            console.log('Primary API failed, trying backup API...');
+            response = await fetch(BACKUP_UNIVERSITY_API);
+        }
         
         if (!response.ok) {
             throw new Error(`HTTP error! Status: ${response.status}`);
@@ -92,13 +106,32 @@ async function searchUniversities(query) {
         
         const data = await response.json();
         
-        if (data.length === 0) {
-            showError(`No universities found matching "${query}"`);
+        // Handle the different API response formats
+        if (Array.isArray(data)) {
+            // Original API format
+            if (data.length === 0) {
+                showError(`No universities found matching "${query}"`);
+            } else {
+                displayUniversities(data);
+            }
+        } else if (data.entries) {
+            // Backup API format
+            const filteredEntries = data.entries.filter(entry => 
+                entry.Description.toLowerCase().includes('university') || 
+                entry.API.toLowerCase().includes('university')
+            );
+            
+            if (filteredEntries.length === 0) {
+                showError(`No universities found matching "${query}"`);
+            } else {
+                displayBackupUniversityData(filteredEntries);
+            }
         } else {
-            displayUniversities(data);
+            showError('Unexpected API response format');
         }
     } catch (error) {
-        showError(`Failed to search universities: ${error.message}`);
+        showError(`Failed to search universities: ${error.message}. Please try again later.`);
+        console.error('University search error:', error);
     } finally {
         hideLoading();
     }
@@ -136,6 +169,26 @@ function displayUniversities(universities) {
                     <div class="university-country">${uni.country}</div>
                     ${uni.web_pages && uni.web_pages.length > 0 ? 
                         `<a href="${uni.web_pages[0]}" target="_blank" class="university-website">Visit Website</a>` : 
+                        ''}
+                </li>
+            `).join('')}
+        </ul>
+    `;
+    
+    resultsContainer.innerHTML = html;
+}
+
+// Function to display backup university data
+function displayBackupUniversityData(entries) {
+    const html = `
+        <h3>Found ${entries.length} university-related APIs</h3>
+        <ul class="university-list">
+            ${entries.map(entry => `
+                <li class="university-item">
+                    <div class="university-name">${entry.API}</div>
+                    <div class="university-country">${entry.Description}</div>
+                    ${entry.Link ? 
+                        `<a href="${entry.Link}" target="_blank" class="university-website">Visit Website</a>` : 
                         ''}
                 </li>
             `).join('')}
