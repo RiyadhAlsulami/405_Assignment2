@@ -12,7 +12,7 @@ const errorMessage = document.getElementById('error-message');
 
 // API URLs
 const RANDOM_USER_API = 'https://randomuser.me/api/';
-const UNIVERSITY_API = 'http://universities.hipolabs.com/search?name=';
+const UNIVERSITY_API = 'https://universities.hipolabs.com/search?name=';
 
 // Current API state
 let currentApi = null;
